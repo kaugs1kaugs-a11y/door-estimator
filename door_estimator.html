@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Door Estimator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue: #1a6fc4; --blue-light: #e8f0fb;
+    --green: #1a8a4a; --green-light: #e8f5ed;
+    --red: #c0392b; --red-light: #fdecea;
+    --orange: #b85c00; --orange-light: #fff3e8;
+    --brown: #7a3a00; --brown-light: #fff0e0;
+    --border: #d0d0d0; --text: #1a1a1a; --muted: #666;
+    --radius: 12px; --tap: 54px;
+  }
+  html { font-size: 17px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #efefef; color: var(--text); padding-bottom: 4rem; }
+  header { background: var(--brown); color: #fff; padding: 1.1rem 1rem 1rem; }
+  header h1 { font-size: 1.2rem; font-weight: 600; }
+  header p { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
+  .section { background: #fff; border-radius: var(--radius); margin: 1rem; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+  .section-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.9rem; }
+  .field { margin-bottom: 0.9rem; }
+  .field:last-child { margin-bottom: 0; }
+  label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 5px; font-weight: 500; }
+  input, select, textarea { width: 100%; min-height: var(--tap); font-size: 1rem; padding: 0 14px; border: 1.5px solid var(--border); border-radius: 10px; background: #fff; color: var(--text); appearance: none; -webkit-appearance: none; }
+  textarea { min-height: 80px; padding: 10px 14px; resize: vertical; font-family: inherit; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brown); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .divider { height: 1px; background: var(--border); margin: 0.9rem 0; }
+  .settings-note { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+  /* Door cards */
+  .door-card { background: #fff; border-radius: var(--radius); margin: 0 1rem 0.75rem; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.07); border-left: 4px solid var(--brown); }
+  .door-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .door-label { font-size: 1rem; font-weight: 600; color: var(--brown); }
+  .del-btn { min-height: 44px; padding: 0 16px; border: 1.5px solid var(--red); background: var(--red-light); color: var(--red); border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .price-box { background: var(--green-light); border: 1.5px solid var(--green); border-radius: 10px; padding: 10px 14px; margin-top: 10px; display: none; }
+  .price-box.show { display: block; }
+  .price-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; color: var(--muted); }
+  .price-row.total { font-size: 1rem; font-weight: 700; color: var(--green); border-top: 1px solid var(--green); padding-top: 6px; margin-top: 6px; margin-bottom: 0; }
+  .config-field { display: none; }
+  .config-field.show { display: block; }
+
+  /* Totals */
+  .totals-card { background: #fff; border-radius: var(--radius); margin: 0 1rem 1rem; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.07); border-left: 4px solid var(--green); }
+  .total-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 8px; color: var(--muted); }
+  .total-row.grand { font-size: 1.2rem; font-weight: 700; color: var(--green); border-top: 1.5px solid var(--border); padding-top: 10px; margin-top: 4px; }
+
+  /* Buttons */
+  .add-btn { display: block; width: calc(100% - 2rem); margin: 0 1rem 0.75rem; min-height: 58px; background: var(--brown-light); color: var(--brown); border: 2px dashed var(--brown); border-radius: var(--radius); font-size: 1.05rem; font-weight: 600; cursor: pointer; }
+  .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0.5rem 1rem 0; }
+  .save-btn { min-height: 56px; background: var(--green-light); color: var(--green); border: 1.5px solid var(--green); border-radius: var(--radius); font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .load-btn { min-height: 56px; background: var(--orange-light); color: var(--orange); border: 1.5px solid var(--orange); border-radius: var(--radius); font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .copy-btn { display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0; min-height: 60px; background: var(--brown); color: #fff; border: none; border-radius: var(--radius); font-size: 1.1rem; font-weight: 700; cursor: pointer; }
+  .clear-btn { display: block; width: calc(100% - 2rem); margin: 0.75rem 1rem 0; min-height: 56px; background: var(--red-light); color: var(--red); border: 1.5px solid var(--red); border-radius: var(--radius); font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .report-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0.75rem 1rem 0; }
+  .copy-btn:active,.save-btn:active,.load-btn:active,.clear-btn:active { opacity:0.8; transform:scale(0.98); }
+
+  /* Overlay / panel */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; }
+  .overlay.show { display: flex; align-items: flex-end; }
+  .panel { background: #fff; border-radius: var(--radius) var(--radius) 0 0; width: 100%; max-height: 75vh; overflow-y: auto; padding: 1.25rem 1rem; }
+  .panel-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+  .saved-job { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 0; border-bottom: 1px solid var(--border); }
+  .saved-job:last-child { border-bottom: none; }
+  .saved-job-info { flex: 1; }
+  .saved-job-name { font-size: 0.95rem; font-weight: 600; }
+  .saved-job-meta { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .saved-job-btns { display: flex; gap: 8px; margin-left: 10px; }
+  .load-job-btn { min-height: 44px; padding: 0 14px; background: var(--blue-light); color: var(--blue); border: 1.5px solid var(--blue); border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .del-job-btn { min-height: 44px; padding: 0 14px; background: var(--red-light); color: var(--red); border: 1.5px solid var(--red); border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .close-panel-btn { display: block; width: 100%; min-height: 52px; margin-top: 1rem; background: #efefef; color: var(--text); border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 600; cursor: pointer; }
+  .no-jobs { text-align: center; color: var(--muted); padding: 2rem 0; font-size: 0.9rem; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 12px 24px; border-radius: 999px; font-size: 0.9rem; font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  /* Lock screen */
+  #lockScreen { position: fixed; inset: 0; background: var(--brown); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+  #lockScreen h2 { color: #fff; font-size: 1.4rem; margin-bottom: 0.5rem; }
+  #lockScreen p { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 2rem; }
+  #pinInput { font-size: 2rem; text-align: center; letter-spacing: 0.5rem; width: 160px; min-height: 70px; border: none; border-radius: 14px; padding: 0 1rem; margin-bottom: 1rem; }
+  #pinInput:focus { outline: 3px solid #fff; }
+  #unlockBtn { width: 160px; min-height: 60px; background: #fff; color: var(--brown); border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 700; cursor: pointer; }
+  #pinError { color: #ffcccc; font-size: 0.9rem; margin-top: 0.75rem; min-height: 1.2rem; }
+  #appContent { display: none; }
+
+  /* Toggle switch */
+  .toggle-row { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+  .toggle-label { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+  .toggle-switch { position: relative; width: 52px; height: 30px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: #ccc; border-radius: 999px; cursor: pointer; transition: background 0.2s; }
+  .toggle-slider:before { content: ''; position: absolute; width: 22px; height: 22px; left: 4px; bottom: 4px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+  .toggle-switch input:checked + .toggle-slider { background: var(--brown); }
+  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(22px); }
+
+  /* Manual cost field */
+  .manual-field { display: none; }
+  .manual-field.show { display: block; }
+
+  /* Warning box */
+  .warn-box { background: var(--orange-light); border: 1.5px solid var(--orange); border-radius: 10px; padding: 8px 12px; margin-top: 8px; font-size: 0.8rem; color: var(--orange); display: none; }
+  .warn-box.show { display: block; }
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <h2>🚪 Door Estimator</h2>
+  <p>Enter your PIN to continue</p>
+  <input type="password" id="pinInput" inputmode="numeric" maxlength="10" placeholder="···" onkeydown="if(event.key==='Enter') checkPin()">
+  <button id="unlockBtn" onclick="checkPin()">Unlock</button>
+  <div id="pinError"></div>
+</div>
+
+<div id="appContent">
+<header>
+  <h1>🚪 Door Estimator</h1>
+  <p>BHI HVHZ &amp; WBD · 35.77% margin · 7% tax · $1,200 single / $1,530 double</p>
+</header>
+
+<!-- Job Info -->
+<div class="section">
+  <div class="section-title">Job Info</div>
+  <div class="row2">
+    <div class="field"><label>Job #</label><input type="text" id="jobNum" placeholder="115378" inputmode="numeric"></div>
+    <div class="field"><label>Date</label><input type="date" id="jobDate"></div>
+  </div>
+  <div class="field"><label>Customer Name</label><input type="text" id="custName" placeholder="Last, First" autocomplete="off"></div>
+  <div class="field"><label>Phone</label><input type="tel" id="custPhone" placeholder="(941) 555-0000"></div>
+  <div class="field"><label>Address</label><input type="text" id="custAddr" placeholder="123 Main St, Sarasota FL" autocomplete="off"></div>
+  <div class="row2">
+    <div class="field"><label>Tentative Install</label><input type="text" id="installDate" placeholder="e.g. June / July" autocomplete="off"></div>
+    <div class="field"><label>Install Days</label><input type="number" id="installDays" placeholder="1" inputmode="numeric" min="1"></div>
+  </div>
+  <div class="field"><label>Job Notes</label><textarea id="jobNotes" placeholder="Scope, access, special instructions..."></textarea></div>
+</div>
+
+<!-- Pricing Settings -->
+<div class="section">
+  <div class="section-title">Pricing Settings</div>
+  <div class="row2">
+    <div class="field">
+      <label>Margin %</label>
+      <input type="number" id="margin" value="35.77" inputmode="decimal" step="0.01" onchange="recalcAll()">
+      <div class="settings-note">Margin on sell price</div>
+    </div>
+    <div class="field">
+      <label>Tax %</label>
+      <input type="number" id="taxRate" value="7" inputmode="decimal" step="0.1" onchange="recalcAll()">
+    </div>
+  </div>
+  <div class="row2">
+    <div class="field">
+      <label>Single Door Labor $</label>
+      <input type="number" id="laborSingle" value="1200" inputmode="numeric" onchange="recalcAll()">
+      <div class="settings-note">Per single door</div>
+    </div>
+    <div class="field">
+      <label>Double/Sidelight Labor $</label>
+      <input type="number" id="laborDouble" value="1530" inputmode="numeric" onchange="recalcAll()">
+      <div class="settings-note">Per double/sidelight unit</div>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="row2">
+    <div class="field">
+      <label>Permit $</label>
+      <input type="number" id="permitCost" value="350" inputmode="numeric" onchange="recalcAll()">
+    </div>
+    <div class="field">
+      <label>Misc Add-on $</label>
+      <input type="number" id="miscCost" value="0" inputmode="numeric" onchange="recalcAll()">
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="field">
+    <label>BHI Cost Adjustment %</label>
+    <input type="number" id="bhiAdjust" value="0" inputmode="decimal" step="0.1" onchange="recalcAll()">
+    <div class="settings-note">0 = current · 5 = 5% increase · applies to all BHI product costs</div>
+  </div>
+</div>
+
+<!-- Door List -->
+<div id="doorList"></div>
+<button class="add-btn" onclick="addDoor()">+ Add Door</button>
+
+<!-- Totals -->
+<div class="totals-card" id="totalsCard">
+  <div class="section-title">Estimate Total</div>
+  <div class="total-row" style="color:var(--muted);font-size:0.82rem"><span>Product cost (BHI)</span><span id="totProductCost">$0.00</span></div>
+  <div class="total-row"><span>Doors subtotal</span><span id="totDoors">$0.00</span></div>
+  <div class="total-row"><span>Tax</span><span id="totTax">$0.00</span></div>
+  <div class="total-row"><span>Labor</span><span id="totLabor">$0.00</span></div>
+  <div class="total-row"><span>Permit</span><span id="totPermit">$0.00</span></div>
+  <div class="total-row"><span>Misc</span><span id="totMisc">$0.00</span></div>
+  <div class="total-row grand"><span>Total</span><span id="totGrand">$0.00</span></div>
+</div>
+
+<!-- Actions -->
+<div class="action-row">
+  <button class="save-btn" onclick="saveJob()">Save Job</button>
+  <button class="load-btn" onclick="openPanel()">Load Job</button>
+</div>
+<div class="report-row">
+  <button class="save-btn" style="background:#1a3a6c;color:#fff;border-color:#1a3a6c" onclick="openReport('customer')">Customer Report</button>
+  <button class="save-btn" style="background:#7a3a00;color:#fff;border-color:#7a3a00" onclick="openReport('dealer')">Dealer Report</button>
+</div>
+<button class="copy-btn" onclick="copyEstimate()">Copy Estimate Summary</button>
+<button class="clear-btn" onclick="clearAll()">Clear / New Job</button>
+
+<!-- Load Panel -->
+<div class="overlay" id="overlay" onclick="closePanelClick(event)">
+  <div class="panel">
+    <div class="panel-title">Saved Estimates</div>
+    <div id="savedList"></div>
+    <button class="close-panel-btn" onclick="closeOverlay()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let doorCount = 0;
+
+// Fixed BHI add-ons that apply to all doors (Bore + Cutdown + Frame)
+const BHI_FIXED = 194.25;
+
+// ─── DOOR CATALOG ────────────────────────────────────────────────────────────
+// All net prices from BHI quotes. BHI_FIXED ($194.25) is already INCLUDED
+// in prices from quote 115378 (confirmed as safety net for custom quoting).
+// modelCost = net price from BHI quote (includes fixed add-ons)
+// isDouble = true means use double/sidelight labor rate
+
+const DOOR_CATALOG = {
+
+  // ── HVHZ 3068 (3/0 × 6/8) ──────────────────────────────────────────────
+  // Full Lite Decorative — Aluminum Flat (Storm) glass
+  'HVHZ_3068_FL_ADELAIDE':   { label:'HVHZ 3/0×6/8 · Full Lite · Adelaide Patina',       modelCost: 3532.67, isDouble: false },
+  'HVHZ_3068_FL_ARTISAN':    { label:'HVHZ 3/0×6/8 · Full Lite · Artisan Patina',        modelCost: 3548.92, isDouble: false },
+  'HVHZ_3068_FL_DAHLIA':     { label:'HVHZ 3/0×6/8 · Full Lite · Dahlia Wrought Iron',   modelCost: 3401.42, isDouble: false },
+  'HVHZ_3068_FL_HARLOW':     { label:'HVHZ 3/0×6/8 · Full Lite · Harlow Patina',         modelCost: 3438.92, isDouble: false },
+  'HVHZ_3068_FL_MANHATTAN':  { label:'HVHZ 3/0×6/8 · Full Lite · Manhattan Patina',      modelCost: 3445.92, isDouble: false },
+  'HVHZ_3068_FL_MODENA_P':   { label:'HVHZ 3/0×6/8 · Full Lite · Modena Patina',         modelCost: 3401.92, isDouble: false },
+  'HVHZ_3068_FL_MODENA_Z':   { label:'HVHZ 3/0×6/8 · Full Lite · Modena Zinc',           modelCost: 3394.67, isDouble: false },
+
+  // Full Lite w/Blinds — Aluminum Flat (Storm) — from quote 114291
+  'HVHZ_3068_FL_BLINDS':     { label:'HVHZ 3/0×6/8 · Full Lite w/Blinds',                modelCost: 1048.25, isDouble: false },
+
+  // Raised Panel — 6 Panel, No Glass
+  'HVHZ_3068_6P_NOGLASS':    { label:'HVHZ 3/0×6/8 · 6 Panel · No Glass',                modelCost: 1559.92, isDouble: false },
+
+  // Flush — No Glass
+  'HVHZ_3068_FLUSH_NOGLASS': { label:'HVHZ 3/0×6/8 · Flush · No Glass',                  modelCost: 475.12,  isDouble: false },
+
+  // Raised Panel — ¼ Lite Over 4 Panel, PVC Clear Low-E
+  'HVHZ_3068_QTR_4P_W51':    { label:'HVHZ 3/0×6/8 · ¼ Lite/4 Panel · PVC Clear Low-E (sys 50.875")', modelCost: 1936.42, isDouble: false },
+  'HVHZ_3068_QTR_4P_W38':    { label:'HVHZ 3/0×6/8 · ¼ Lite/4 Panel · PVC Clear Low-E (sys 37.5")',   modelCost: 1092.87, isDouble: false },
+
+  // Raised Panel — ½ Lite variants — from quote 114291
+  'HVHZ_3068_HALF_2P_BLINDS':{ label:'HVHZ 3/0×6/8 · ½ Lite/2 Panel w/Blinds',          modelCost: 751.62,  isDouble: false },
+  'HVHZ_3068_HALF_2P_PRIV':  { label:'HVHZ 3/0×6/8 · ½ Lite/2 Panel Privacy',           modelCost: 776.37,  isDouble: false },
+  'HVHZ_3068_HALF_1P_LOWE':  { label:'HVHZ 3/0×6/8 · ½ Lite/1 Panel Low-E',             modelCost: 791.87,  isDouble: false },
+
+  // Ventilating — Windsert styles (sys 37.5")
+  'HVHZ_3068_VENT_HALF_W':   { label:'HVHZ 3/0×6/8 · Ventilating · ½ Windsert · Clear Low-E (sys 37.5")',           modelCost: 1353.62, isDouble: false },
+  'HVHZ_3068_VENT_FULL_W':   { label:'HVHZ 3/0×6/8 · Ventilating · Full Windsert · Clear Low-E + Security Screen (sys 37.5")', modelCost: 2062.12, isDouble: false },
+  'HVHZ_3068_VENT_FULL_MW':  { label:'HVHZ 3/0×6/8 · Ventilating · Full Windsert · Milky White + Security Screen (sys 37.5")',  modelCost: 2062.12, isDouble: false },
+
+  // ── HVHZ 3080 (3/0 × 8/0) ──────────────────────────────────────────────
+  // Full Lite Decorative — Aluminum Flat (Storm)
+  'HVHZ_3080_FL_MODENA_Z':   { label:'HVHZ 3/0×8/0 · Full Lite · Modena Zinc',           modelCost: 4272.92, isDouble: false },
+  'HVHZ_3080_FL_MODENA_P':   { label:'HVHZ 3/0×8/0 · Full Lite · Modena Patina',         modelCost: 4282.17, isDouble: false },
+  'HVHZ_3080_FL_MANHATTAN':  { label:'HVHZ 3/0×8/0 · Full Lite · Manhattan Patina',      modelCost: 4317.92, isDouble: false },
+  'HVHZ_3080_FL_HARLOW':     { label:'HVHZ 3/0×8/0 · Full Lite · Harlow Patina',         modelCost: 4301.92, isDouble: false },
+  'HVHZ_3080_FL_DAHLIA':     { label:'HVHZ 3/0×8/0 · Full Lite · Dahlia Wrought Iron',   modelCost: 4266.42, isDouble: false },
+  'HVHZ_3080_FL_ARTISAN':    { label:'HVHZ 3/0×8/0 · Full Lite · Artisan Patina',        modelCost: 4481.67, isDouble: false },
+  'HVHZ_3080_FL_ADELAIDE':   { label:'HVHZ 3/0×8/0 · Full Lite · Adelaide Patina',       modelCost: 4412.67, isDouble: false },
+
+  // Full Lite w/Blinds — from quote 114291
+  'HVHZ_3080_FL_BLINDS':     { label:'HVHZ 3/0×8/0 · Full Lite w/Blinds',                modelCost: 1340.25, isDouble: false },
+
+  // Raised Panel — 6 Panel, No Glass
+  'HVHZ_3080_6P_NOGLASS':    { label:'HVHZ 3/0×8/0 · 6 Panel · No Glass',                modelCost: 2248.17, isDouble: false },
+
+  // Raised Panel — ¼ Lite Over 4 Panel, PVC Clear Low-E
+  'HVHZ_3080_QTR_4P':        { label:'HVHZ 3/0×8/0 · ¼ Lite/4 Panel · PVC Clear Low-E', modelCost: 1936.42, isDouble: false },
+
+  // Ventilating — Windsert styles (sys 37.5")
+  'HVHZ_3080_VENT_3QTR_MW':  { label:'HVHZ 3/0×8/0 · Ventilating · ¾ Windsert/1 Panel · Milky White + Security Screen (sys 37.5")', modelCost: 2319.37, isDouble: false },
+  'HVHZ_3080_3QTR_SDL':      { label:'HVHZ 3/0×8/0 · ¾ Lite/1 Panel · SDL 4-Cross · Clear Low-E +366 (sys 37.5")',                  modelCost: 1467.87, isDouble: false },
+
+  // ── WBD 3068 (3/0 × 6/8) — from quote 114291 ───────────────────────────
+  'WBD_3068_HALF_2P_BLINDS':  { label:'WBD 3/0×6/8 · ½ Lite/2 Panel w/Blinds',          modelCost: 751.62,  isDouble: false },
+  'WBD_3068_HALF_2P_PRIV':    { label:'WBD 3/0×6/8 · ½ Lite/2 Panel Privacy',           modelCost: 776.37,  isDouble: false },
+  'WBD_3068_HALF_1P_LOWE':    { label:'WBD 3/0×6/8 · ½ Lite/1 Panel Low-E',             modelCost: 791.87,  isDouble: false },
+  'WBD_3068_6P_NOGLASS':      { label:'WBD 3/0×6/8 · 6 Panel · No Glass',                modelCost: 373.37,  isDouble: false },
+
+  // ── HVHZ 3068 (3/0 × 6/8) — PVC Flat (Keystone) Decorative · sys 37.5" — from quote 111775 ──
+  'HVHZ_3068_PVC_ADELAIDE_W38':   { label:'HVHZ 3/0×6/8 · Full Lite · Adelaide Patina · PVC/Keystone (sys 37.5")',          modelCost: 2259.62, isDouble: false },
+  'HVHZ_3068_PVC_BAYPOINT':       { label:'HVHZ 3/0×6/8 · Full Lite · Bay Point Patina · PVC/Keystone (sys 37.5")',          modelCost: 1896.37, isDouble: false },
+  'HVHZ_3068_PVC_CROSSWALK':      { label:'HVHZ 3/0×6/8 · Full Lite · Crosswalk Nickel · PVC/Keystone (sys 37.5")',          modelCost: 1816.62, isDouble: false },
+  'HVHZ_3068_PVC_DORIAN':         { label:'HVHZ 3/0×6/8 · Full Lite · Dorian Black Aluminum · PVC/Keystone (sys 37.5")',     modelCost: 2067.37, isDouble: false },
+  'HVHZ_3068_PVC_GRACE':          { label:'HVHZ 3/0×6/8 · Full Lite · Grace Nickel · PVC/Keystone (sys 37.5")',              modelCost: 1848.12, isDouble: false },
+  'HVHZ_3068_PVC_JACINTO':        { label:'HVHZ 3/0×6/8 · Full Lite · Jacinto Wrought Iron · PVC/Keystone (sys 37.5")',      modelCost: 2400.37, isDouble: false },
+  'HVHZ_3068_PVC_MAJESTIC':       { label:'HVHZ 3/0×6/8 · Full Lite · Majestic Nickel · PVC/Keystone (sys 37.5")',           modelCost: 1704.87, isDouble: false },
+  'HVHZ_3068_PVC_MARGATE':        { label:'HVHZ 3/0×6/8 · Full Lite · Margate Nickel · PVC/Keystone (sys 37.5")',            modelCost: 2016.37, isDouble: false },
+  'HVHZ_3068_PVC_RENEWED':        { label:'HVHZ 3/0×6/8 · Full Lite · Renewed Impressions Nickel · PVC/Keystone (sys 37.5")',modelCost: 2217.87, isDouble: false },
+  'HVHZ_3068_PVC_VILANO':         { label:'HVHZ 3/0×6/8 · Full Lite · Vilano Patina · PVC/Keystone (sys 37.5")',             modelCost: 2061.37, isDouble: false },
+  'HVHZ_3068_PVC_WATERSIDE':      { label:'HVHZ 3/0×6/8 · Full Lite · Waterside Black Chrome · PVC/Keystone (sys 37.5")',    modelCost: 2273.12, isDouble: false },
+
+  // HVHZ 3068 — ½ Lite/2 Panel · PVC Flat (Keystone) · sys 37.5"
+  'HVHZ_3068_HALF_PVC_CROSSWALK': { label:'HVHZ 3/0×6/8 · ½ Lite/2 Panel · Crosswalk Nickel · PVC/Keystone (sys 37.5")',    modelCost: 1528.87, isDouble: false },
+  'HVHZ_3068_HALF_PVC_MAJESTIC':  { label:'HVHZ 3/0×6/8 · ½ Lite/2 Panel · Majestic Nickel · PVC/Keystone (sys 37.5")',     modelCost: 1636.37, isDouble: false },
+  'HVHZ_3068_HALF_PVC_WATERSIDE': { label:'HVHZ 3/0×6/8 · ½ Lite/2 Panel · Waterside Black Chrome · PVC/Keystone (sys 37.5")', modelCost: 2143.37, isDouble: false },
+
+  // ── HVHZ 3080 (3/0 × 8/0) — PVC Flat (Keystone) Decorative · sys 37.5" — from quote 111775 ──
+  'HVHZ_3080_PVC_BAYPOINT':       { label:'HVHZ 3/0×8/0 · Full Lite · Bay Point Patina · PVC/Keystone (sys 37.5")',          modelCost: 2209.87, isDouble: false },
+  'HVHZ_3080_PVC_CROSSWALK':      { label:'HVHZ 3/0×8/0 · Full Lite · Crosswalk Nickel · PVC/Keystone (sys 37.5")',          modelCost: 2058.87, isDouble: false },
+  'HVHZ_3080_PVC_DORIAN':         { label:'HVHZ 3/0×8/0 · Full Lite · Dorian Black Aluminum · PVC/Keystone (sys 37.5")',     modelCost: 2416.12, isDouble: false },
+  'HVHZ_3080_PVC_GRACE':          { label:'HVHZ 3/0×8/0 · Full Lite · Grace Nickel · PVC/Keystone (sys 37.5")',              modelCost: 1941.62, isDouble: false },
+  'HVHZ_3080_PVC_JACINTO':        { label:'HVHZ 3/0×8/0 · Full Lite · Jacinto Wrought Iron · PVC/Keystone (sys 37.5")',      modelCost: 3622.87, isDouble: false },
+  'HVHZ_3080_PVC_MAJESTIC':       { label:'HVHZ 3/0×8/0 · Full Lite · Majestic Nickel · PVC/Keystone (sys 37.5")',           modelCost: 2703.62, isDouble: false },
+  'HVHZ_3080_PVC_MARGATE':        { label:'HVHZ 3/0×8/0 · Full Lite · Margate Nickel · PVC/Keystone (sys 37.5")',            modelCost: 2330.62, isDouble: false },
+  'HVHZ_3080_PVC_RENEWED':        { label:'HVHZ 3/0×8/0 · Full Lite · Renewed Impressions Nickel · PVC/Keystone (sys 37.5")',modelCost: 3554.37, isDouble: false },
+  'HVHZ_3080_PVC_VILANO':         { label:'HVHZ 3/0×8/0 · Full Lite · Vilano Patina · PVC/Keystone (sys 37.5")',             modelCost: 2380.12, isDouble: false },
+  'HVHZ_3080_PVC_WATERSIDE':      { label:'HVHZ 3/0×8/0 · Full Lite · Waterside Black Chrome · PVC/Keystone (sys 37.5")',    modelCost: 2588.62, isDouble: false },
+
+  // ── HVHZ DOUBLE 6068 (6/0 × 6/8) — from quote 115377 ───────────────────
+  // Full Lite Decorative — Aluminum Flat (Storm) — isDouble: true → $1,530 labor
+  'HVHZ_D6068_FL_ADELAIDE':  { label:'HVHZ Double 6/0×6/8 · Full Lite · Adelaide Patina',      modelCost: 4240.49, isDouble: true },
+  'HVHZ_D6068_FL_ARTISAN':   { label:'HVHZ Double 6/0×6/8 · Full Lite · Artisan Patina',       modelCost: 4275.49, isDouble: true },
+  'HVHZ_D6068_FL_DAHLIA':    { label:'HVHZ Double 6/0×6/8 · Full Lite · Dahlia Wrought Iron',  modelCost: 4052.49, isDouble: true },
+  'HVHZ_D6068_FL_HARLOW':    { label:'HVHZ Double 6/0×6/8 · Full Lite · Harlow Patina',        modelCost: 4086.74, isDouble: true },
+  'HVHZ_D6068_FL_MANHATTAN': { label:'HVHZ Double 6/0×6/8 · Full Lite · Manhattan Patina',     modelCost: 4115.49, isDouble: true },
+  'HVHZ_D6068_FL_MODENA_P':  { label:'HVHZ Double 6/0×6/8 · Full Lite · Modena Patina',        modelCost: 4034.49, isDouble: true },
+  'HVHZ_D6068_FL_MODENA_Z':  { label:'HVHZ Double 6/0×6/8 · Full Lite · Modena Zinc',          modelCost: 4025.99, isDouble: true },
+
+  // ── MANUAL ENTRY ─────────────────────────────────────────────────────────
+  'MANUAL':                   { label:'Manual Entry (custom cost)',                         modelCost: 0,       isDouble: false }
+};
+
+// Grouped for dropdown display
+const DOOR_GROUPS = [
+  { group: 'HVHZ 3/0×6/8 — Full Lite Decorative', keys: ['HVHZ_3068_FL_ADELAIDE','HVHZ_3068_FL_ARTISAN','HVHZ_3068_FL_DAHLIA','HVHZ_3068_FL_HARLOW','HVHZ_3068_FL_MANHATTAN','HVHZ_3068_FL_MODENA_P','HVHZ_3068_FL_MODENA_Z'] },
+  { group: 'HVHZ 3/0×6/8 — Other Styles', keys: ['HVHZ_3068_FL_BLINDS','HVHZ_3068_6P_NOGLASS','HVHZ_3068_FLUSH_NOGLASS','HVHZ_3068_QTR_4P_W51','HVHZ_3068_QTR_4P_W38','HVHZ_3068_HALF_2P_BLINDS','HVHZ_3068_HALF_2P_PRIV','HVHZ_3068_HALF_1P_LOWE','HVHZ_3068_VENT_HALF_W','HVHZ_3068_VENT_FULL_W','HVHZ_3068_VENT_FULL_MW'] },
+  { group: 'HVHZ 3/0×8/0 — Full Lite Decorative', keys: ['HVHZ_3080_FL_MODENA_Z','HVHZ_3080_FL_MODENA_P','HVHZ_3080_FL_MANHATTAN','HVHZ_3080_FL_HARLOW','HVHZ_3080_FL_DAHLIA','HVHZ_3080_FL_ARTISAN','HVHZ_3080_FL_ADELAIDE'] },
+  { group: 'HVHZ 3/0×8/0 — Other Styles', keys: ['HVHZ_3080_FL_BLINDS','HVHZ_3080_6P_NOGLASS','HVHZ_3080_QTR_4P','HVHZ_3080_VENT_3QTR_MW','HVHZ_3080_3QTR_SDL'] },
+  { group: 'WBD 3/0×6/8', keys: ['WBD_3068_HALF_2P_BLINDS','WBD_3068_HALF_2P_PRIV','WBD_3068_HALF_1P_LOWE','WBD_3068_6P_NOGLASS'] },
+  { group: 'HVHZ 3/0×6/8 — Full Lite PVC/Keystone (sys 37.5")', keys: ['HVHZ_3068_PVC_ADELAIDE_W38','HVHZ_3068_PVC_BAYPOINT','HVHZ_3068_PVC_CROSSWALK','HVHZ_3068_PVC_DORIAN','HVHZ_3068_PVC_GRACE','HVHZ_3068_PVC_JACINTO','HVHZ_3068_PVC_MAJESTIC','HVHZ_3068_PVC_MARGATE','HVHZ_3068_PVC_RENEWED','HVHZ_3068_PVC_VILANO','HVHZ_3068_PVC_WATERSIDE'] },
+  { group: 'HVHZ 3/0×6/8 — ½ Lite PVC/Keystone (sys 37.5")', keys: ['HVHZ_3068_HALF_PVC_CROSSWALK','HVHZ_3068_HALF_PVC_MAJESTIC','HVHZ_3068_HALF_PVC_WATERSIDE'] },
+  { group: 'HVHZ 3/0×8/0 — Full Lite PVC/Keystone (sys 37.5")', keys: ['HVHZ_3080_PVC_BAYPOINT','HVHZ_3080_PVC_CROSSWALK','HVHZ_3080_PVC_DORIAN','HVHZ_3080_PVC_GRACE','HVHZ_3080_PVC_JACINTO','HVHZ_3080_PVC_MAJESTIC','HVHZ_3080_PVC_MARGATE','HVHZ_3080_PVC_RENEWED','HVHZ_3080_PVC_VILANO','HVHZ_3080_PVC_WATERSIDE'] },
+  { group: 'HVHZ Double 6/0×6/8 — Full Lite Decorative', keys: ['HVHZ_D6068_FL_ADELAIDE','HVHZ_D6068_FL_ARTISAN','HVHZ_D6068_FL_DAHLIA','HVHZ_D6068_FL_HARLOW','HVHZ_D6068_FL_MANHATTAN','HVHZ_D6068_FL_MODENA_P','HVHZ_D6068_FL_MODENA_Z'] },
+  { group: 'Custom', keys: ['MANUAL'] }
+];
+
+function buildDoorOptions() {
+  let html = '<option value="">— Select door model —</option>';
+  for (const grp of DOOR_GROUPS) {
+    html += `<optgroup label="${grp.group}">`;
+    for (const key of grp.keys) {
+      html += `<option value="${key}">${DOOR_CATALOG[key].label}</option>`;
+    }
+    html += '</optgroup>';
+  }
+  return html;
+}
+
+function addDoor() {
+  doorCount++;
+  const id = doorCount;
+  const div = document.createElement('div');
+  div.className = 'door-card';
+  div.id = `door-${id}`;
+  div.innerHTML = `
+    <div class="door-header">
+      <span class="door-label">Door ${id}</span>
+      <button class="del-btn" onclick="deleteDoor(${id})">Remove</button>
+    </div>
+    <div class="field">
+      <label>Door Model</label>
+      <select id="model-${id}" onchange="onModelChange(${id})">
+        ${buildDoorOptions()}
+      </select>
+    </div>
+    <div class="field manual-field" id="manualCostField-${id}">
+      <label>Manual BHI Cost $</label>
+      <input type="number" id="manualCost-${id}" value="0" inputmode="decimal" step="0.01" onchange="updatePrice(${id})">
+      <div class="settings-note">Enter the net price from BHI quote</div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Handing</label>
+        <select id="handing-${id}" onchange="updatePrice(${id})">
+          <option value="RH-OUT">Right Hand Outswing</option>
+          <option value="LH-OUT">Left Hand Outswing</option>
+          <option value="RH-IN">Right Hand Inswing</option>
+          <option value="LH-IN">Left Hand Inswing</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Unit Type</label>
+        <select id="unitType-${id}" onchange="updatePrice(${id})">
+          <option value="single">Single Door</option>
+          <option value="double">Double / Sidelight</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Qty</label>
+      <input type="number" id="qty-${id}" value="1" min="1" inputmode="numeric" onchange="updatePrice(${id})" style="min-height:var(--tap)">
+    </div>
+    <div class="field">
+      <label>Location / Notes</label>
+      <input type="text" id="notes-${id}" placeholder="e.g. Front entry, master bedroom" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Coastal Coatings Color <span style="font-size:0.75rem;color:var(--orange);font-weight:400">· Pricing TBD</span></label>
+      <select id="coastalColor-${id}">
+        <option value="">No Coastal Coatings</option>
+        <option value="True White">True White</option>
+        <option value="Espresso Brown">Espresso Brown</option>
+        <option value="Soft Sage Green">Soft Sage Green</option>
+        <option value="Flat Black">Flat Black</option>
+        <option value="True Blue">True Blue</option>
+        <option value="Florida Sunset">Florida Sunset</option>
+        <option value="Coastal Blue">Coastal Blue</option>
+        <option value="Yor Brick Red">Ybor Brick Red</option>
+      </select>
+      <div class="settings-note">BHI Coastal Coatings Prefinish · 10-year warranty · add-on pricing pending</div>
+    </div>
+    <div class="price-box" id="pricebox-${id}">
+      <div class="price-row"><span>BHI Cost (ea)</span><span id="pCost-${id}">—</span></div>
+      <div class="price-row"><span>Sell Price (ea)</span><span id="pSell-${id}">—</span></div>
+      <div class="price-row"><span>Tax (ea)</span><span id="pTax-${id}">—</span></div>
+      <div class="price-row"><span>Labor</span><span id="pLabor-${id}">—</span></div>
+      <div class="price-row total"><span>Line Total (×<span id="pQtyLabel-${id}">1</span>)</span><span id="pTotal-${id}">—</span></div>
+    </div>
+  `;
+  document.getElementById('doorList').appendChild(div);
+}
+
+function deleteDoor(id) {
+  const el = document.getElementById(`door-${id}`);
+  if (el) el.remove();
+  recalcAll();
+}
+
+function onModelChange(id) {
+  const modelKey = document.getElementById(`model-${id}`).value;
+  const manualField = document.getElementById(`manualCostField-${id}`);
+  if (modelKey === 'MANUAL') {
+    manualField.classList.add('show');
+  } else {
+    manualField.classList.remove('show');
+  }
+  // Auto-set unit type based on catalog isDouble flag
+  if (modelKey && DOOR_CATALOG[modelKey]) {
+    document.getElementById(`unitType-${id}`).value = DOOR_CATALOG[modelKey].isDouble ? 'double' : 'single';
+  }
+  updatePrice(id);
+}
+
+function updatePrice(id) {
+  const modelKey = document.getElementById(`model-${id}`).value;
+  if (!modelKey) {
+    document.getElementById(`pricebox-${id}`).classList.remove('show');
+    recalcAll();
+    return;
+  }
+
+  const entry = DOOR_CATALOG[modelKey];
+  const margin = parseFloat(document.getElementById('margin').value) / 100 || 0.3577;
+  const taxRate = parseFloat(document.getElementById('taxRate').value) / 100 || 0.07;
+  const bhiAdj = parseFloat(document.getElementById('bhiAdjust').value) / 100 || 0;
+  const qty = parseInt(document.getElementById(`qty-${id}`).value) || 1;
+  const unitType = document.getElementById(`unitType-${id}`).value;
+  const laborSingle = parseFloat(document.getElementById('laborSingle').value) || 1200;
+  const laborDouble = parseFloat(document.getElementById('laborDouble').value) || 1530;
+
+  let rawCost = modelKey === 'MANUAL'
+    ? (parseFloat(document.getElementById(`manualCost-${id}`).value) || 0)
+    : entry.modelCost;
+
+  const adjCost = rawCost * (1 + bhiAdj);
+  const sellPrice = adjCost / (1 - margin);
+  const tax = sellPrice * taxRate;
+  const laborRate = unitType === 'double' ? laborDouble : laborSingle;
+  const lineTotal = (sellPrice + tax) * qty + laborRate;
+
+  document.getElementById(`pCost-${id}`).textContent = fmt(adjCost);
+  document.getElementById(`pSell-${id}`).textContent = fmt(sellPrice);
+  document.getElementById(`pTax-${id}`).textContent = fmt(tax);
+  document.getElementById(`pLabor-${id}`).textContent = fmt(laborRate);
+  document.getElementById(`pQtyLabel-${id}`).textContent = qty;
+  document.getElementById(`pTotal-${id}`).textContent = fmt(lineTotal);
+  document.getElementById(`pricebox-${id}`).classList.add('show');
+
+  recalcAll();
+}
+
+function recalcAll() {
+  const margin = parseFloat(document.getElementById('margin').value) / 100 || 0.3577;
+  const taxRate = parseFloat(document.getElementById('taxRate').value) / 100 || 0.07;
+  const bhiAdj = parseFloat(document.getElementById('bhiAdjust').value) / 100 || 0;
+  const permitCost = parseFloat(document.getElementById('permitCost').value) || 0;
+  const miscCost = parseFloat(document.getElementById('miscCost').value) || 0;
+  const laborSingle = parseFloat(document.getElementById('laborSingle').value) || 1200;
+  const laborDouble = parseFloat(document.getElementById('laborDouble').value) || 1530;
+
+  let totalProductCost = 0, totalSell = 0, totalTax = 0, totalLabor = 0;
+
+  for (let i = 1; i <= doorCount; i++) {
+    const el = document.getElementById(`door-${i}`);
+    if (!el) continue;
+    const modelKey = document.getElementById(`model-${i}`)?.value;
+    if (!modelKey) continue;
+    const entry = DOOR_CATALOG[modelKey];
+    const qty = parseInt(document.getElementById(`qty-${i}`).value) || 1;
+    const unitType = document.getElementById(`unitType-${i}`).value;
+
+    let rawCost = modelKey === 'MANUAL'
+      ? (parseFloat(document.getElementById(`manualCost-${i}`).value) || 0)
+      : entry.modelCost;
+
+    const adjCost = rawCost * (1 + bhiAdj);
+    const sell = adjCost / (1 - margin);
+    const tax = sell * taxRate;
+    const labor = unitType === 'double' ? laborDouble : laborSingle;
+
+    totalProductCost += adjCost * qty;
+    totalSell += sell * qty;
+    totalTax += tax * qty;
+    totalLabor += labor;
+  }
+
+  const grand = totalSell + totalTax + totalLabor + permitCost + miscCost;
+
+  document.getElementById('totProductCost').textContent = fmt(totalProductCost);
+  document.getElementById('totDoors').textContent = fmt(totalSell);
+  document.getElementById('totTax').textContent = fmt(totalTax);
+  document.getElementById('totLabor').textContent = fmt(totalLabor);
+  document.getElementById('totPermit').textContent = fmt(permitCost);
+  document.getElementById('totMisc').textContent = fmt(miscCost);
+  document.getElementById('totGrand').textContent = fmt(grand);
+}
+
+// ─── SAVE / LOAD ─────────────────────────────────────────────────────────────
+function collectJobData() {
+  const doors = [];
+  for (let i = 1; i <= doorCount; i++) {
+    const el = document.getElementById(`door-${i}`);
+    if (!el) continue;
+    doors.push({
+      id: i,
+      model: document.getElementById(`model-${i}`)?.value || '',
+      manualCost: document.getElementById(`manualCost-${i}`)?.value || '',
+      handing: document.getElementById(`handing-${i}`)?.value || '',
+      unitType: document.getElementById(`unitType-${i}`)?.value || 'single',
+      qty: document.getElementById(`qty-${i}`)?.value || '1',
+      notes: document.getElementById(`notes-${i}`)?.value || '',
+      coastalColor: document.getElementById(`coastalColor-${i}`)?.value || ''
+    });
+  }
+  return {
+    jobNum: document.getElementById('jobNum').value,
+    jobDate: document.getElementById('jobDate').value,
+    custName: document.getElementById('custName').value,
+    custPhone: document.getElementById('custPhone').value,
+    custAddr: document.getElementById('custAddr').value,
+    installDate: document.getElementById('installDate').value,
+    installDays: document.getElementById('installDays').value,
+    jobNotes: document.getElementById('jobNotes').value,
+    margin: document.getElementById('margin').value,
+    taxRate: document.getElementById('taxRate').value,
+    laborSingle: document.getElementById('laborSingle').value,
+    laborDouble: document.getElementById('laborDouble').value,
+    permitCost: document.getElementById('permitCost').value,
+    miscCost: document.getElementById('miscCost').value,
+    bhiAdjust: document.getElementById('bhiAdjust').value,
+    doors,
+    doorCount
+  };
+}
+
+function saveJob() {
+  const data = collectJobData();
+  const name = data.custName || data.jobNum || 'Unnamed';
+  const key = 'door_job_' + Date.now();
+  const saves = JSON.parse(localStorage.getItem('door_estimates') || '{}');
+  saves[key] = { name, date: data.jobDate || new Date().toLocaleDateString(), data };
+  localStorage.setItem('door_estimates', JSON.stringify(saves));
+  showToast('Job saved: ' + name);
+}
+
+function openPanel() {
+  const saves = JSON.parse(localStorage.getItem('door_estimates') || '{}');
+  const list = document.getElementById('savedList');
+  const keys = Object.keys(saves);
+  if (!keys.length) {
+    list.innerHTML = '<div class="no-jobs">No saved estimates</div>';
+  } else {
+    list.innerHTML = keys.map(k => `
+      <div class="saved-job">
+        <div class="saved-job-info">
+          <div class="saved-job-name">${saves[k].name}</div>
+          <div class="saved-job-meta">${saves[k].date}</div>
+        </div>
+        <div class="saved-job-btns">
+          <button class="load-job-btn" onclick="loadJob('${k}')">Load</button>
+          <button class="del-job-btn" onclick="deleteJob('${k}')">Del</button>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('overlay').classList.add('show');
+}
+
+function loadJob(key) {
+  const saves = JSON.parse(localStorage.getItem('door_estimates') || '{}');
+  const saved = saves[key];
+  if (!saved) return;
+  const d = saved.data;
+  document.getElementById('jobNum').value = d.jobNum || '';
+  document.getElementById('jobDate').value = d.jobDate || '';
+  document.getElementById('custName').value = d.custName || '';
+  document.getElementById('custPhone').value = d.custPhone || '';
+  document.getElementById('custAddr').value = d.custAddr || '';
+  document.getElementById('installDate').value = d.installDate || '';
+  document.getElementById('installDays').value = d.installDays || '';
+  document.getElementById('jobNotes').value = d.jobNotes || '';
+  document.getElementById('margin').value = d.margin || '35.77';
+  document.getElementById('taxRate').value = d.taxRate || '7';
+  document.getElementById('laborSingle').value = d.laborSingle || '1200';
+  document.getElementById('laborDouble').value = d.laborDouble || '1530';
+  document.getElementById('permitCost').value = d.permitCost || '350';
+  document.getElementById('miscCost').value = d.miscCost || '0';
+  document.getElementById('bhiAdjust').value = d.bhiAdjust || '0';
+
+  document.getElementById('doorList').innerHTML = '';
+  doorCount = 0;
+  (d.doors || []).forEach(door => {
+    addDoor();
+    const i = doorCount;
+    document.getElementById(`model-${i}`).value = door.model;
+    if (door.model === 'MANUAL') {
+      document.getElementById(`manualCostField-${i}`).classList.add('show');
+      document.getElementById(`manualCost-${i}`).value = door.manualCost;
+    }
+    document.getElementById(`handing-${i}`).value = door.handing;
+    document.getElementById(`unitType-${i}`).value = door.unitType || 'single';
+    document.getElementById(`qty-${i}`).value = door.qty;
+    document.getElementById(`notes-${i}`).value = door.notes;
+    if (door.coastalColor) document.getElementById(`coastalColor-${i}`).value = door.coastalColor;
+    updatePrice(i);
+  });
+
+  closeOverlay();
+  showToast('Loaded: ' + saved.name);
+}
+
+function deleteJob(key) {
+  const saves = JSON.parse(localStorage.getItem('door_estimates') || '{}');
+  delete saves[key];
+  localStorage.setItem('door_estimates', JSON.stringify(saves));
+  openPanel();
+}
+
+function closePanelClick(e) { if (e.target.id === 'overlay') closeOverlay(); }
+function closeOverlay() { document.getElementById('overlay').classList.remove('show'); }
+
+// ─── COPY SUMMARY ────────────────────────────────────────────────────────────
+function copyEstimate() {
+  const data = collectJobData();
+  const margin = parseFloat(data.margin) / 100 || 0.3577;
+  const taxRate = parseFloat(data.taxRate) / 100 || 0.07;
+  const bhiAdj = parseFloat(data.bhiAdjust) / 100 || 0;
+  const laborSingle = parseFloat(data.laborSingle) || 1200;
+  const laborDouble = parseFloat(data.laborDouble) || 1530;
+  const permit = parseFloat(data.permitCost) || 0;
+  const misc = parseFloat(data.miscCost) || 0;
+
+  let lines = [];
+  lines.push('DOOR ESTIMATE — ' + (data.custName || 'Customer'));
+  lines.push('Job #: ' + (data.jobNum || '—') + '  |  Date: ' + (data.jobDate || '—'));
+  lines.push('Address: ' + (data.custAddr || '—'));
+  lines.push('─────────────────────────────────');
+
+  let grand = 0;
+  data.doors.forEach((door, idx) => {
+    if (!door.model) return;
+    const entry = DOOR_CATALOG[door.model];
+    const qty = parseInt(door.qty) || 1;
+    const rawCost = door.model === 'MANUAL' ? (parseFloat(door.manualCost) || 0) : entry.modelCost;
+    const adjCost = rawCost * (1 + bhiAdj);
+    const sell = adjCost / (1 - margin);
+    const tax = sell * taxRate;
+    const labor = door.unitType === 'double' ? laborDouble : laborSingle;
+    const lineTotal = (sell + tax) * qty + labor;
+    grand += lineTotal;
+    lines.push(`Door ${idx + 1}: ${entry.label}`);
+    lines.push(`  Handing: ${door.handing}  |  Qty: ${qty}  |  ${door.unitType === 'double' ? 'Double/Sidelight' : 'Single'}`);
+    if (door.coastalColor) lines.push(`  Coastal Coatings: ${door.coastalColor} (pricing TBD)`);
+    if (door.notes) lines.push(`  Location: ${door.notes}`);
+    lines.push(`  Line Total: ${fmt(lineTotal)}`);
+  });
+
+  grand += permit + misc;
+  lines.push('─────────────────────────────────');
+  if (permit) lines.push('Permit: ' + fmt(permit));
+  if (misc) lines.push('Misc: ' + fmt(misc));
+  lines.push('TOTAL: ' + fmt(grand));
+  if (data.jobNotes) lines.push('\nNotes: ' + data.jobNotes);
+
+  navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('Copied!')).catch(() => showToast('Copy failed'));
+}
+
+// ─── REPORTS ─────────────────────────────────────────────────────────────────
+function openReport(type) {
+  const isDealer = type === 'dealer';
+  const data = collectJobData();
+  const margin = parseFloat(data.margin) / 100 || 0.3577;
+  const taxRate = parseFloat(data.taxRate) / 100 || 0.07;
+  const bhiAdj = parseFloat(data.bhiAdjust) / 100 || 0;
+  const laborSingle = parseFloat(data.laborSingle) || 1200;
+  const laborDouble = parseFloat(data.laborDouble) || 1530;
+  const permit = parseFloat(data.permitCost) || 0;
+  const misc = parseFloat(data.miscCost) || 0;
+
+  let totalSell = 0, totalTax = 0, totalLabor = 0, totalCost = 0;
+
+  let rows = '';
+  data.doors.forEach((door, idx) => {
+    if (!door.model) return;
+    const entry = DOOR_CATALOG[door.model];
+    const qty = parseInt(door.qty) || 1;
+    const rawCost = door.model === 'MANUAL' ? (parseFloat(door.manualCost) || 0) : entry.modelCost;
+    const adjCost = rawCost * (1 + bhiAdj);
+    const sell = adjCost / (1 - margin);
+    const tax = sell * taxRate;
+    const labor = door.unitType === 'double' ? laborDouble : laborSingle;
+    const lineTotal = (sell + tax) * qty + labor;
+    totalCost += adjCost * qty;
+    totalSell += sell * qty;
+    totalTax += tax * qty;
+    totalLabor += labor;
+
+    if (isDealer) {
+      rows += `<tr>
+        <td>${idx + 1}</td>
+        <td><div class="win-type">${entry.label}</div><div class="win-meta">${door.handing} · ${door.unitType === 'double' ? 'Double/Sidelight' : 'Single'}</div>${door.coastalColor ? `<div class="win-meta" style="color:#b85c00">🎨 Coastal Coatings: ${door.coastalColor} (pricing TBD)</div>` : ''}${door.notes ? `<div class="win-notes">${door.notes}</div>` : ''}</td>
+        <td class="price-cell">${fmt(adjCost)}</td>
+        <td class="price-cell">${fmt(sell)}</td>
+        <td class="price-cell">${qty}</td>
+        <td class="price-cell">${fmt(tax * qty)}</td>
+        <td class="price-cell">${fmt(labor)}</td>
+        <td class="price-cell total-cell">${fmt(lineTotal)}</td>
+      </tr>`;
+    } else {
+      rows += `<tr>
+        <td>${idx + 1}</td>
+        <td><div class="win-type">${entry.label}</div><div class="win-meta">${door.handing} · ${door.unitType === 'double' ? 'Double/Sidelight' : 'Single'}</div>${door.coastalColor ? `<div class="win-meta" style="color:#b85c00">🎨 Coastal Coatings: ${door.coastalColor}</div>` : ''}${door.notes ? `<div class="win-notes">${door.notes}</div>` : ''}</td>
+        <td class="price-cell line-price-cell">${fmt((sell + tax) * qty)}</td>
+      </tr>`;
+    }
+  });
+
+  const grand = totalSell + totalTax + totalLabor + permit + misc;
+
+  const totalsHTML = isDealer ? `
+    <div class="totals-section">
+      <table class="totals-table">
+        <tr><td>BHI Product Cost</td><td>${fmt(totalCost)}</td></tr>
+        <tr><td>Sell (pre-tax)</td><td>${fmt(totalSell)}</td></tr>
+        <tr><td>Tax</td><td>${fmt(totalTax)}</td></tr>
+        <tr><td>Labor</td><td>${fmt(totalLabor)}</td></tr>
+        ${permit ? `<tr><td>Permit</td><td>${fmt(permit)}</td></tr>` : ''}
+        ${misc ? `<tr><td>Misc</td><td>${fmt(misc)}</td></tr>` : ''}
+        <tr class="grand-total"><td>Grand Total</td><td>${fmt(grand)}</td></tr>
+      </table>
+    </div>` : `
+    <div class="totals-section">
+      <table class="totals-table">
+        ${permit ? `<tr><td>Permit</td><td>${fmt(permit)}</td></tr>` : ''}
+        ${misc ? `<tr><td>Misc</td><td>${fmt(misc)}</td></tr>` : ''}
+        <tr class="grand-total"><td>Total Investment</td><td>${fmt(grand)}</td></tr>
+        <tr class="cc-row"><td colspan="2">Credit card payments subject to 3% processing fee</td></tr>
+      </table>
+    </div>`;
+
+  const sigHTML = isDealer ? '' : `
+    <div class="sig-section">
+      <div class="terms">
+        This proposal is valid for 30 days. A 50% deposit is required to schedule installation.
+        All work performed to current Florida Building Code. Permit fees included as noted above.
+        Price subject to change if field conditions differ materially from scope described.
+      </div>
+      <div class="sig-row">
+        <div><div class="sig-line"></div><div class="sig-label">Customer Signature / Date</div></div>
+        <div><div class="sig-line"></div><div class="sig-label">Authorized Representative / Date</div></div>
+      </div>
+    </div>`;
+
+  const dealerHeader = '<th>Door</th><th>Description</th><th>BHI Cost</th><th>Sell</th><th>Qty</th><th>Tax</th><th>Labor</th><th>Line Total</th>';
+  const customerHeader = '<th>Door</th><th>Description</th><th class="line-price-header">Price</th>';
+
+  const companyHTML = `
+    <div class="company-header">
+      <div class="company-name">Mullet's Aluminum Products</div>
+      <div class="company-info">6345 McIntosh Road, Sarasota, FL 34238</div>
+      <div class="company-info">License #: [License] · Phone: (941) 555-0000</div>
+    </div>`;
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${isDealer ? 'Dealer Cost Report' : 'Door Proposal'}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; color: #1a1a1a; background: #fff; }
+  .page { max-width: 900px; margin: 0 auto; padding: 2rem; }
+  .company-header { margin-bottom: 1.5rem; border-bottom: 3px solid #7a3a00; padding-bottom: 1rem; }
+  .company-name { font-size: 1.4rem; font-weight: 700; color: #7a3a00; }
+  .company-info { font-size: 0.82rem; color: #555; margin-top: 2px; }
+  .report-title { font-size: 1.1rem; font-weight: 700; color: #7a3a00; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .job-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; background: #f5f7fa; border-radius: 8px; padding: 1rem; }
+  .job-field { display: flex; flex-direction: column; }
+  .job-field label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #999; margin-bottom: 2px; letter-spacing: 0.05em; }
+  .job-field span { font-size: 0.88rem; color: #1a1a1a; }
+  .job-field.job-notes { grid-column: 1 / -1; }
+  .win-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+  .win-table th { background: #7a3a00; color: #fff; padding: 8px 10px; font-size: 0.78rem; text-align: left; }
+  .win-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+  .win-table tr:last-child td { border-bottom: none; }
+  .win-type { font-weight: 700; font-size: 0.9rem; color: #7a3a00; }
+  .win-meta { font-size: 0.75rem; color: #555; margin: 3px 0; }
+  .win-notes { font-size: 0.75rem; color: #888; font-style: italic; margin-top: 2px; }
+  .price-cell { text-align: right; font-size: 0.85rem; white-space: nowrap; }
+  .total-cell { font-weight: 700; color: #7a3a00; }
+  .totals-section { display: flex; justify-content: flex-end; margin-bottom: 2rem; }
+  table.totals-table { min-width: 280px; border-collapse: collapse; }
+  table.totals-table td { padding: 5px 10px; font-size: 0.9rem; border-bottom: 1px solid #e0e0e0; }
+  table.totals-table td:last-child { text-align: right; font-weight: 600; }
+  .grand-total td { font-size: 1.1rem; font-weight: 700; color: #7a3a00; border-top: 2px solid #7a3a00; border-bottom: 2px solid #7a3a00; }
+  .cc-row td { font-size: 0.8rem; color: #888; border-bottom: none; }
+  .sig-section { margin-top: 2rem; border-top: 1px solid #ccc; padding-top: 1.5rem; }
+  .terms { font-size: 0.75rem; color: #666; line-height: 1.5; margin-bottom: 1.5rem; }
+  .sig-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .sig-line { border-bottom: 1.5px solid #333; padding-bottom: 2px; margin-top: 2rem; }
+  .sig-label { font-size: 0.72rem; color: #888; margin-top: 4px; }
+  .print-btn { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #7a3a00; color: #fff; border: none; padding: 14px 24px; border-radius: 999px; font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .back-btn { position: fixed; bottom: 1.5rem; left: 1.5rem; background: #fff; color: #7a3a00; border: 2px solid #7a3a00; padding: 14px 24px; border-radius: 999px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .line-price-cell { visibility: visible; }
+  @media print { .print-btn, .back-btn, #toggleBtn { display: none; } body { font-size: 11px; } .page { padding: 1rem; } }
+</style></head><body>
+<div class="page">
+  ${companyHTML}
+  <div class="report-title">${isDealer ? 'Dealer Cost Report' : 'Door Installation Proposal'}</div>
+  <div class="job-info">
+    <div class="job-field"><label>Customer</label><span>${data.custName || '—'}</span></div>
+    <div class="job-field"><label>Date</label><span>${data.jobDate || new Date().toLocaleDateString()}</span></div>
+    <div class="job-field"><label>Phone</label><span>${data.custPhone || '—'}</span></div>
+    <div class="job-field"><label>Job #</label><span>${data.jobNum || '—'}</span></div>
+    <div class="job-field job-notes"><label>Address</label><span>${data.custAddr || '—'}</span></div>
+    ${data.jobNotes ? `<div class="job-field job-notes"><label>Scope of Work</label><span>${data.jobNotes}</span></div>` : ''}
+  </div>
+  <table class="win-table">
+    <thead><tr><th>#</th>${isDealer ? dealerHeader : customerHeader}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  ${totalsHTML}
+  ${sigHTML}
+</div>
+<button class="back-btn" onclick="window.close()">✕ Close</button>
+<button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+${!isDealer ? `<button id="toggleBtn" onclick="var cells=document.getElementsByClassName('line-price-cell');var hdr=document.getElementsByClassName('line-price-header');var h=this.dataset.hidden==='1';for(var i=0;i<cells.length;i++)cells[i].style.visibility=h?'':'hidden';for(var j=0;j<hdr.length;j++)hdr[j].style.visibility=h?'':'hidden';this.dataset.hidden=h?'0':'1';this.textContent=h?'Hide Line Prices':'Show Line Prices';" data-hidden="0" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#fff;color:#7a3a00;border:2px solid #7a3a00;padding:14px 24px;border-radius:999px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15)">Hide Line Prices</button>` : ''}
+</body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+// ─── CLEAR ───────────────────────────────────────────────────────────────────
+function clearAll() {
+  if (!confirm('Clear all data and start a new job?')) return;
+  document.getElementById('doorList').innerHTML = '';
+  doorCount = 0;
+  ['jobNum','jobDate','custName','custPhone','custAddr','installDate','installDays','jobNotes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('margin').value = '35.77';
+  document.getElementById('taxRate').value = '7';
+  document.getElementById('laborSingle').value = '1200';
+  document.getElementById('laborDouble').value = '1530';
+  document.getElementById('permitCost').value = '350';
+  document.getElementById('miscCost').value = '0';
+  document.getElementById('bhiAdjust').value = '0';
+  recalcAll();
+}
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function fmt(n) { return '$' + (isNaN(n) ? '0.00' : n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─── PIN ─────────────────────────────────────────────────────────────────────
+function checkPin() {
+  const val = document.getElementById('pinInput').value;
+  if (val === '777') {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
+    document.getElementById('jobDate').value = new Date().toISOString().slice(0, 10);
+  } else {
+    document.getElementById('pinError').textContent = 'Incorrect PIN';
+    document.getElementById('pinInput').value = '';
+  }
+}
+</script>
+</div>
+</body>
+</html>
