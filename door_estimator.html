@@ -356,6 +356,16 @@ const DOOR_CATALOG = {
   'HVHZ_D6068_FL_MODENA_P':  { label:'HVHZ Double 6/0×6/8 · Full Lite · Modena Patina',        modelCost: 4034.49, isDouble: true },
   'HVHZ_D6068_FL_MODENA_Z':  { label:'HVHZ Double 6/0×6/8 · Full Lite · Modena Zinc',          modelCost: 4025.99, isDouble: true },
 
+  // ── HVHZ DOUBLE 6080 (6/0 × 8/0) — from quote 115571 ───────────────────
+  // Full Lite Decorative — Aluminum Flat (Storm) — isDouble: true → $1,530 labor
+  'HVHZ_D6080_FL_ADELAIDE':  { label:'HVHZ Double 6/0×8/0 · Full Lite · Adelaide Patina',      modelCost: 5258.24, isDouble: true },
+  'HVHZ_D6080_FL_ARTISAN':   { label:'HVHZ Double 6/0×8/0 · Full Lite · Artisan Patina',       modelCost: 5323.24, isDouble: true },
+  'HVHZ_D6080_FL_DAHLIA':    { label:'HVHZ Double 6/0×8/0 · Full Lite · Dahlia Wrought Iron',  modelCost: 5055.24, isDouble: true },
+  'HVHZ_D6080_FL_HARLOW':    { label:'HVHZ Double 6/0×8/0 · Full Lite · Harlow Patina',        modelCost: 5060.24, isDouble: true },
+  'HVHZ_D6080_FL_MANHATTAN': { label:'HVHZ Double 6/0×8/0 · Full Lite · Manhattan Patina',     modelCost: 5093.99, isDouble: true },
+  'HVHZ_D6080_FL_MODENA_P':  { label:'HVHZ Double 6/0×8/0 · Full Lite · Modena Patina',        modelCost: 5037.99, isDouble: true },
+  'HVHZ_D6080_FL_MODENA_Z':  { label:'HVHZ Double 6/0×8/0 · Full Lite · Modena Zinc',          modelCost: 5027.74, isDouble: true },
+
   // ── MANUAL ENTRY ─────────────────────────────────────────────────────────
   'MANUAL':                   { label:'Manual Entry (custom cost)',                         modelCost: 0,       isDouble: false }
 };
@@ -364,13 +374,14 @@ const DOOR_CATALOG = {
 const DOOR_GROUPS = [
   { group: 'HVHZ 3/0×6/8 — Full Lite Decorative', keys: ['HVHZ_3068_FL_ADELAIDE','HVHZ_3068_FL_ARTISAN','HVHZ_3068_FL_DAHLIA','HVHZ_3068_FL_HARLOW','HVHZ_3068_FL_MANHATTAN','HVHZ_3068_FL_MODENA_P','HVHZ_3068_FL_MODENA_Z'] },
   { group: 'HVHZ 3/0×6/8 — Other Styles', keys: ['HVHZ_3068_FL_BLINDS','HVHZ_3068_6P_NOGLASS','HVHZ_3068_FLUSH_NOGLASS','HVHZ_3068_QTR_4P_W51','HVHZ_3068_QTR_4P_W38','HVHZ_3068_HALF_2P_BLINDS','HVHZ_3068_HALF_2P_PRIV','HVHZ_3068_HALF_1P_LOWE','HVHZ_3068_VENT_HALF_W','HVHZ_3068_VENT_FULL_W','HVHZ_3068_VENT_FULL_MW'] },
-  { group: 'HVHZ 3/0×8/0 — Full Lite Decorative', keys: ['HVHZ_3080_FL_MODENA_Z','HVHZ_3080_FL_MODENA_P','HVHZ_3080_FL_MANHATTAN','HVHZ_3080_FL_HARLOW','HVHZ_3080_FL_DAHLIA','HVHZ_3080_FL_ARTISAN','HVHZ_3080_FL_ADELAIDE'] },
-  { group: 'HVHZ 3/0×8/0 — Other Styles', keys: ['HVHZ_3080_FL_BLINDS','HVHZ_3080_6P_NOGLASS','HVHZ_3080_QTR_4P','HVHZ_3080_VENT_3QTR_MW','HVHZ_3080_3QTR_SDL'] },
-  { group: 'WBD 3/0×6/8', keys: ['WBD_3068_HALF_2P_BLINDS','WBD_3068_HALF_2P_PRIV','WBD_3068_HALF_1P_LOWE','WBD_3068_6P_NOGLASS'] },
   { group: 'HVHZ 3/0×6/8 — Full Lite PVC/Keystone (sys 37.5")', keys: ['HVHZ_3068_PVC_ADELAIDE_W38','HVHZ_3068_PVC_BAYPOINT','HVHZ_3068_PVC_CROSSWALK','HVHZ_3068_PVC_DORIAN','HVHZ_3068_PVC_GRACE','HVHZ_3068_PVC_JACINTO','HVHZ_3068_PVC_MAJESTIC','HVHZ_3068_PVC_MARGATE','HVHZ_3068_PVC_RENEWED','HVHZ_3068_PVC_VILANO','HVHZ_3068_PVC_WATERSIDE'] },
   { group: 'HVHZ 3/0×6/8 — ½ Lite PVC/Keystone (sys 37.5")', keys: ['HVHZ_3068_HALF_PVC_CROSSWALK','HVHZ_3068_HALF_PVC_MAJESTIC','HVHZ_3068_HALF_PVC_WATERSIDE'] },
+  { group: 'HVHZ 3/0×8/0 — Full Lite Decorative', keys: ['HVHZ_3080_FL_MODENA_Z','HVHZ_3080_FL_MODENA_P','HVHZ_3080_FL_MANHATTAN','HVHZ_3080_FL_HARLOW','HVHZ_3080_FL_DAHLIA','HVHZ_3080_FL_ARTISAN','HVHZ_3080_FL_ADELAIDE'] },
+  { group: 'HVHZ 3/0×8/0 — Other Styles', keys: ['HVHZ_3080_FL_BLINDS','HVHZ_3080_6P_NOGLASS','HVHZ_3080_QTR_4P','HVHZ_3080_VENT_3QTR_MW','HVHZ_3080_3QTR_SDL'] },
   { group: 'HVHZ 3/0×8/0 — Full Lite PVC/Keystone (sys 37.5")', keys: ['HVHZ_3080_PVC_BAYPOINT','HVHZ_3080_PVC_CROSSWALK','HVHZ_3080_PVC_DORIAN','HVHZ_3080_PVC_GRACE','HVHZ_3080_PVC_JACINTO','HVHZ_3080_PVC_MAJESTIC','HVHZ_3080_PVC_MARGATE','HVHZ_3080_PVC_RENEWED','HVHZ_3080_PVC_VILANO','HVHZ_3080_PVC_WATERSIDE'] },
+  { group: 'WBD 3/0×6/8', keys: ['WBD_3068_HALF_2P_BLINDS','WBD_3068_HALF_2P_PRIV','WBD_3068_HALF_1P_LOWE','WBD_3068_6P_NOGLASS'] },
   { group: 'HVHZ Double 6/0×6/8 — Full Lite Decorative', keys: ['HVHZ_D6068_FL_ADELAIDE','HVHZ_D6068_FL_ARTISAN','HVHZ_D6068_FL_DAHLIA','HVHZ_D6068_FL_HARLOW','HVHZ_D6068_FL_MANHATTAN','HVHZ_D6068_FL_MODENA_P','HVHZ_D6068_FL_MODENA_Z'] },
+  { group: 'HVHZ Double 6/0×8/0 — Full Lite Decorative', keys: ['HVHZ_D6080_FL_ADELAIDE','HVHZ_D6080_FL_ARTISAN','HVHZ_D6080_FL_DAHLIA','HVHZ_D6080_FL_HARLOW','HVHZ_D6080_FL_MANHATTAN','HVHZ_D6080_FL_MODENA_P','HVHZ_D6080_FL_MODENA_Z'] },
   { group: 'Custom', keys: ['MANUAL'] }
 ];
 
