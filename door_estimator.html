@@ -90,6 +90,20 @@
   #pinError { color: #ffcccc; font-size: 0.9rem; margin-top: 0.75rem; min-height: 1.2rem; }
   #appContent { display: none; }
 
+  /* Searchable dropdown */
+  .search-dropdown { position: relative; }
+  .search-input { width: 100%; min-height: var(--tap); font-size: 1rem; padding: 0 14px; border: 1.5px solid var(--border); border-radius: 10px; background: #fff; color: var(--text); }
+  .search-input:focus { outline: none; border-color: var(--brown); }
+  .search-results { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1.5px solid var(--brown); border-radius: 10px; max-height: 260px; overflow-y: auto; z-index: 200; box-shadow: 0 4px 16px rgba(0,0,0,0.15); margin-top: 4px; }
+  .search-results.show { display: block; }
+  .search-group { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding: 8px 12px 4px; background: #f5f5f5; }
+  .search-item { padding: 12px 14px; font-size: 0.88rem; cursor: pointer; border-bottom: 1px solid #f0f0f0; line-height: 1.3; }
+  .search-item:last-child { border-bottom: none; }
+  .search-item:active, .search-item.highlighted { background: var(--brown-light); color: var(--brown); }
+  .search-selected { font-size: 0.78rem; color: var(--brown); font-weight: 600; margin-top: 5px; padding: 6px 10px; background: var(--brown-light); border-radius: 8px; display: none; }
+  .search-selected.show { display: block; }
+  .search-no-results { padding: 14px; font-size: 0.88rem; color: var(--muted); text-align: center; }
+
   /* Toggle switch */
   .toggle-row { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
   .toggle-label { font-size: 0.9rem; font-weight: 500; color: var(--text); }
@@ -372,6 +386,62 @@ function buildDoorOptions() {
   return html;
 }
 
+// ─── SEARCHABLE DROPDOWN ──────────────────────────────────────────────────────
+function openSearch(id) {
+  filterSearch(id);
+}
+
+function filterSearch(id) {
+  const query = document.getElementById(`modelSearch-${id}`).value.toLowerCase().trim();
+  const resultsEl = document.getElementById(`searchResults-${id}`);
+  let html = '';
+  let totalMatches = 0;
+
+  for (const grp of DOOR_GROUPS) {
+    const matches = grp.keys.filter(key => {
+      const label = DOOR_CATALOG[key].label.toLowerCase();
+      return !query || label.includes(query) || key.toLowerCase().includes(query);
+    });
+    if (!matches.length) continue;
+    html += `<div class="search-group">${grp.group}</div>`;
+    for (const key of matches) {
+      html += `<div class="search-item" onmousedown="selectModel(${id},'${key}')">${DOOR_CATALOG[key].label}</div>`;
+      totalMatches++;
+    }
+  }
+
+  if (!totalMatches) {
+    html = '<div class="search-no-results">No matches — try "3068", "blinds", "jacinto"…</div>';
+  }
+
+  resultsEl.innerHTML = html;
+  resultsEl.classList.add('show');
+}
+
+function selectModel(id, key) {
+  document.getElementById(`model-${id}`).value = key;
+  document.getElementById(`modelSearch-${id}`).value = '';
+  document.getElementById(`searchResults-${id}`).classList.remove('show');
+  const selectedEl = document.getElementById(`searchSelected-${id}`);
+  selectedEl.textContent = '✓ ' + DOOR_CATALOG[key].label;
+  selectedEl.classList.add('show');
+  onModelChange(id);
+}
+
+function closeSearchDelayed(id) {
+  setTimeout(() => {
+    document.getElementById(`searchResults-${id}`)?.classList.remove('show');
+  }, 200);
+}
+
+function clearModelSelection(id) {
+  document.getElementById(`model-${id}`).value = '';
+  document.getElementById(`modelSearch-${id}`).value = '';
+  document.getElementById(`searchSelected-${id}`).classList.remove('show');
+  document.getElementById(`pricebox-${id}`).classList.remove('show');
+  recalcAll();
+}
+
 function addDoor() {
   doorCount++;
   const id = doorCount;
@@ -385,9 +455,13 @@ function addDoor() {
     </div>
     <div class="field">
       <label>Door Model</label>
-      <select id="model-${id}" onchange="onModelChange(${id})">
-        ${buildDoorOptions()}
-      </select>
+      <div class="search-dropdown" id="modelDropdown-${id}">
+        <input type="text" class="search-input" id="modelSearch-${id}" placeholder="Type to search — e.g. jacinto, 3080, blinds..." autocomplete="off"
+          onfocus="openSearch(${id})" oninput="filterSearch(${id})" onblur="closeSearchDelayed(${id})">
+        <div class="search-results" id="searchResults-${id}"></div>
+        <div class="search-selected" id="searchSelected-${id}"></div>
+        <input type="hidden" id="model-${id}" value="">
+      </div>
     </div>
     <div class="field manual-field" id="manualCostField-${id}">
       <label>Manual BHI Cost $</label>
@@ -648,6 +722,11 @@ function loadJob(key) {
     addDoor();
     const i = doorCount;
     document.getElementById(`model-${i}`).value = door.model;
+    if (door.model && DOOR_CATALOG[door.model]) {
+      const sel = document.getElementById(`searchSelected-${i}`);
+      sel.textContent = '✓ ' + DOOR_CATALOG[door.model].label;
+      sel.classList.add('show');
+    }
     if (door.model === 'MANUAL') {
       document.getElementById(`manualCostField-${i}`).classList.add('show');
       document.getElementById(`manualCost-${i}`).value = door.manualCost;
@@ -765,7 +844,7 @@ function openReport(type) {
       rows += `<tr>
         <td>${idx + 1}</td>
         <td><div class="win-type">${entry.label}</div><div class="win-meta">${door.handing} · ${door.unitType === 'double' ? 'Double/Sidelight' : 'Single'}</div>${door.coastalColor ? `<div class="win-meta" style="color:#b85c00">🎨 Coastal Coatings: ${door.coastalColor}</div>` : ''}${door.notes ? `<div class="win-notes">${door.notes}</div>` : ''}</td>
-        <td class="price-cell line-price-cell">${fmt((sell + tax) * qty)}</td>
+        <td class="price-cell line-price-cell">${fmt(lineTotal)}</td>
       </tr>`;
     }
   });
@@ -807,7 +886,7 @@ function openReport(type) {
     </div>`;
 
   const dealerHeader = '<th>Door</th><th>Description</th><th>BHI Cost</th><th>Sell</th><th>Qty</th><th>Tax</th><th>Labor</th><th>Line Total</th>';
-  const customerHeader = '<th>Door</th><th>Description</th><th class="line-price-header">Price</th>';
+  const customerHeader = '<th>Door</th><th>Description</th><th class="line-price-header">Material &amp; Install</th>';
 
   const companyHTML = `
     <div class="company-header">
