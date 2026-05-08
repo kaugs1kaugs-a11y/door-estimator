@@ -316,6 +316,18 @@ const DOOR_CATALOG = {
   'WBD_3068_HALF_1P_LOWE':    { label:'WBD 3/0×6/8 · ½ Lite/1 Panel Low-E',             modelCost: 791.87,  isDouble: false },
   'WBD_3068_6P_NOGLASS':      { label:'WBD 3/0×6/8 · 6 Panel · No Glass',                modelCost: 373.37,  isDouble: false },
 
+  // ── WBD Profile 180 — from quote 115987 ─────────────────────────────────
+  'WBD_3068_FL_LOWE_P180_69': { label:'WBD 3/0×6/8 · Flush Full Lite · Clear Low-E+366 · Profile 180 · 6-9/16" frame', modelCost: 1159.46, isDouble: false },
+  'WBD_3068_FL_LOWE_P180_49': { label:'WBD 3/0×6/8 · Flush Full Lite · Clear Low-E+366 · Profile 180 · 4-9/16" frame', modelCost: 1139.46, isDouble: false },
+  'WBD_2668_FL_LOWE_P180_49': { label:'WBD 2/6×6/8 · Flush Full Lite · Clear Low-E+366 · Profile 180 · 4-9/16" frame', modelCost: 1139.46, isDouble: false },
+  'WBD_3068_HALF_LOWE_P180':  { label:'WBD 3/0×6/8 · ½ Lite/2 Panel · Clear Low-E+366 · Profile 180 · 4-9/16" frame', modelCost: 1029.46, isDouble: false },
+
+  // ── HVHZ Profile 180 — from quote 118400 ────────────────────────────────
+  'HVHZ_3068_FL_LOWE_P180_69': { label:'HVHZ 3/0×6/8 · Flush Full Lite · Clear Low-E+366 · Profile 180 · 6-9/16" frame', modelCost: 1250.46, isDouble: false },
+  'HVHZ_3068_FL_LOWE_P180_49': { label:'HVHZ 3/0×6/8 · Flush Full Lite · Clear Low-E+366 · Profile 180 · 4-9/16" frame', modelCost: 1230.46, isDouble: false },
+  'HVHZ_2668_FL_LOWE_P180_49': { label:'HVHZ 2/6×6/8 · Flush Full Lite · Clear Low-E+366 · Profile 180 · 4-9/16" frame', modelCost: 1230.46, isDouble: false },
+  'HVHZ_3068_HALF_LOWE_P180':  { label:'HVHZ 3/0×6/8 · ½ Lite/2 Panel · Clear Low-E+366 · Profile 180 · 4-9/16" frame', modelCost: 1120.46, isDouble: false },
+
   // ── HVHZ 3068 (3/0 × 6/8) — PVC Flat (Keystone) Decorative · sys 37.5" — from quote 111775 ──
   'HVHZ_3068_PVC_ADELAIDE_W38':   { label:'HVHZ 3/0×6/8 · Full Lite · Adelaide Patina · PVC/Keystone (sys 37.5")',          modelCost: 2259.62, isDouble: false },
   'HVHZ_3068_PVC_BAYPOINT':       { label:'HVHZ 3/0×6/8 · Full Lite · Bay Point Patina · PVC/Keystone (sys 37.5")',          modelCost: 1896.37, isDouble: false },
@@ -379,7 +391,9 @@ const DOOR_GROUPS = [
   { group: 'HVHZ 3/0×8/0 — Full Lite Decorative', keys: ['HVHZ_3080_FL_MODENA_Z','HVHZ_3080_FL_MODENA_P','HVHZ_3080_FL_MANHATTAN','HVHZ_3080_FL_HARLOW','HVHZ_3080_FL_DAHLIA','HVHZ_3080_FL_ARTISAN','HVHZ_3080_FL_ADELAIDE'] },
   { group: 'HVHZ 3/0×8/0 — Other Styles', keys: ['HVHZ_3080_FL_BLINDS','HVHZ_3080_6P_NOGLASS','HVHZ_3080_QTR_4P','HVHZ_3080_VENT_3QTR_MW','HVHZ_3080_3QTR_SDL'] },
   { group: 'HVHZ 3/0×8/0 — Full Lite PVC/Keystone (sys 37.5")', keys: ['HVHZ_3080_PVC_BAYPOINT','HVHZ_3080_PVC_CROSSWALK','HVHZ_3080_PVC_DORIAN','HVHZ_3080_PVC_GRACE','HVHZ_3080_PVC_JACINTO','HVHZ_3080_PVC_MAJESTIC','HVHZ_3080_PVC_MARGATE','HVHZ_3080_PVC_RENEWED','HVHZ_3080_PVC_VILANO','HVHZ_3080_PVC_WATERSIDE'] },
-  { group: 'WBD 3/0×6/8', keys: ['WBD_3068_HALF_2P_BLINDS','WBD_3068_HALF_2P_PRIV','WBD_3068_HALF_1P_LOWE','WBD_3068_6P_NOGLASS'] },
+  { group: 'WBD 3/0×6/8 — Standard', keys: ['WBD_3068_HALF_2P_BLINDS','WBD_3068_HALF_2P_PRIV','WBD_3068_HALF_1P_LOWE','WBD_3068_6P_NOGLASS'] },
+  { group: 'WBD — Profile 180', keys: ['WBD_3068_FL_LOWE_P180_69','WBD_3068_FL_LOWE_P180_49','WBD_2668_FL_LOWE_P180_49','WBD_3068_HALF_LOWE_P180'] },
+  { group: 'HVHZ — Profile 180', keys: ['HVHZ_3068_FL_LOWE_P180_69','HVHZ_3068_FL_LOWE_P180_49','HVHZ_2668_FL_LOWE_P180_49','HVHZ_3068_HALF_LOWE_P180'] },
   { group: 'HVHZ Double 6/0×6/8 — Full Lite Decorative', keys: ['HVHZ_D6068_FL_ADELAIDE','HVHZ_D6068_FL_ARTISAN','HVHZ_D6068_FL_DAHLIA','HVHZ_D6068_FL_HARLOW','HVHZ_D6068_FL_MANHATTAN','HVHZ_D6068_FL_MODENA_P','HVHZ_D6068_FL_MODENA_Z'] },
   { group: 'HVHZ Double 6/0×8/0 — Full Lite Decorative', keys: ['HVHZ_D6080_FL_ADELAIDE','HVHZ_D6080_FL_ARTISAN','HVHZ_D6080_FL_DAHLIA','HVHZ_D6080_FL_HARLOW','HVHZ_D6080_FL_MANHATTAN','HVHZ_D6080_FL_MODENA_P','HVHZ_D6080_FL_MODENA_Z'] },
   { group: 'Custom', keys: ['MANUAL'] }
